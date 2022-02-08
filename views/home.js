@@ -8,13 +8,15 @@ import {
 } from 'react-native';
 import { Button, Box, NativeBaseProvider } from 'native-base';
 import Styles from '../css/styles';
+import modal from '../components/modal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const home = () => {
 
      const textInputRef = useRef();
      const [disableSubmit, setDisableSubmit] = useState(true);
-     
+     const [headerArray, setHeaderArray] = useState([]);
+
      const updateInputsProps = useCallback(() => {
 
           if(textInputRef.current.isFocused()) 
@@ -26,8 +28,22 @@ const home = () => {
           }
      }, []);
 
-     const submitSync = () => {
-          
+     const submitSync = async () => {
+          console.log('hola');
+          const headerKeyArray = await AsyncStorage.getItem('keyTextValuesheader')
+          const headerValueArray = await AsyncStorage.getItem('valueTextValuesheader')
+          const bodyKeyArray = await AsyncStorage.getItem('keyTextValuesheader')
+          const bodyValueArray = await AsyncStorage.getItem('valueTextValuesheader')
+
+          if(headerKeyArray && headerValueArray)
+          {
+               const headerKeyArray = JSON.parse(keyTexts)
+               const headerValueArray = JSON.parse(valueText)
+
+               headerKeyArray.map( (index, value) => {
+                    console.log(index, value);
+               })
+          }
      }
 
      const changeUrl = (text) => {
@@ -58,7 +74,7 @@ const home = () => {
                <View style={Styles.view}>
                     <NativeBaseProvider>
                          <Box>
-                              <Button key='sm' size='sm' id="button_submit" isDisabled={disableSubmit} onClick={submitSync}>
+                              <Button key='sm' size='sm' id="button_submit" isDisabled={disableSubmit} onClick={ () => submitSync}>
                                    Sincronizar
                               </Button>
                          </Box>
