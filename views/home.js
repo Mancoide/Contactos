@@ -1,4 +1,4 @@
-import React, {useRef, useCallback, useState} from 'react';
+import React, {useRef, useCallback, useState, useEffect} from 'react';
 import { 
      View,
      ScrollView, 
@@ -15,7 +15,13 @@ const home = () => {
 
      const textInputRef = useRef();
      const [disableSubmit, setDisableSubmit] = useState(true);
-     const [headerArray, setHeaderArray] = useState([]);
+     const [headerArray, setHeaderArray] = useState({
+          Accept: 'application/json',
+          'Content-Type': 'application/json'
+     });
+     const [bodyArray, setBodyArray] = useState({});
+     const [isUpdate, setIsUpdate] = useState(false);
+     const [urlText, setUrlText] = useState('');
 
      const updateInputsProps = useCallback(() => {
 
@@ -29,27 +35,65 @@ const home = () => {
      }, []);
 
      const submitSync = async () => {
-          console.log('hola');
-          const headerKeyArray = await AsyncStorage.getItem('keyTextValuesheader')
-          const headerValueArray = await AsyncStorage.getItem('valueTextValuesheader')
-          const bodyKeyArray = await AsyncStorage.getItem('keyTextValuesheader')
-          const bodyValueArray = await AsyncStorage.getItem('valueTextValuesheader')
 
-          if(headerKeyArray && headerValueArray)
+          const headerKeyStorage = await AsyncStorage.getItem('keyTextValuesheader')
+          const headerValueStorage = await AsyncStorage.getItem('valueTextValuesheader')
+          const bodyKeyStorage = await AsyncStorage.getItem('keyTextValuesheader')
+          const bodyValueStorage = await AsyncStorage.getItem('valueTextValuesheader')
+
+          if(headerKeyStorage && headerValueStorage)
           {
-               const headerKeyArray = JSON.parse(keyTexts)
-               const headerValueArray = JSON.parse(valueText)
+               const headerKeyArray = JSON.parse(headerKeyStorage)
+               const headerValueArray = JSON.parse(headerValueStorage)
 
-               headerKeyArray.map( (index, value) => {
-                    console.log(index, value);
+               headerKeyArray.map( (item, index) => {
+                    var newObjet = Object.assign( headerArray , { [item.text]: headerValueArray[index].text });
+                    setHeaderArray(newObjet)
                })
           }
+
+          if(bodyKeyStorage && bodyValueStorage)
+          {
+               const bodyKeyArray = JSON.parse(bodyKeyStorage)
+               const bodyValueArray = JSON.parse(bodyValueStorage)
+
+               bodyKeyArray.map( (item, index) => {
+                    var newObjet = Object.assign( bodyArray, { [item.text]: bodyValueArray[index].text });
+                    setBodyArray(newObjet)
+               })
+          }
+
+          setIsUpdate(true);
      }
+
+     useEffect(() => {
+          
+          const sendRequest = async () => {
+               try {
+                    const response = await fetch(urlText, {
+                         method: 'POST',
+                         headers: headerArray,
+                         body: JSON.stringify(bodyArray)
+                    });
+     
+                    const json = await response.json();
+                    console.log('json', json);
+               } catch (error) {
+                    console.log(error);
+               }
+               
+
+          }
+          
+          sendRequest();
+     }, [isUpdate]);
+     
 
      const changeUrl = (text) => {
           if(text !== '')
           {
                // console.log(document.getElementById('button_submit'))
+               setUrlText(text);
                setDisableSubmit(false)
           }
           else
@@ -74,7 +118,7 @@ const home = () => {
                <View style={Styles.view}>
                     <NativeBaseProvider>
                          <Box>
-                              <Button key='sm' size='sm' id="button_submit" isDisabled={disableSubmit} onClick={ () => submitSync}>
+                              <Button key='sm' size='sm' id="button_submit" isDisabled={disableSubmit} onPress={ () => submitSync() }>
                                    Sincronizar
                               </Button>
                          </Box>
