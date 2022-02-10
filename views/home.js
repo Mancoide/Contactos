@@ -4,12 +4,16 @@ import {
      ScrollView, 
      TextInput, 
      Text,
-     StyleSheet
+     StyleSheet,
+     Alert,
+     PermissionsAndroid 
 } from 'react-native';
 import { Button, Box, NativeBaseProvider } from 'native-base';
 import Styles from '../css/styles';
 import modal from '../components/modal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from "@react-native-community/netinfo";
+import Contacts from 'react-native-contacts';
 
 const home = () => {
 
@@ -22,6 +26,7 @@ const home = () => {
      const [bodyArray, setBodyArray] = useState({});
      const [isUpdate, setIsUpdate] = useState(false);
      const [urlText, setUrlText] = useState('');
+     const [jsonResponse, setJsonResponse] = useState();
 
      const updateInputsProps = useCallback(() => {
 
@@ -63,11 +68,16 @@ const home = () => {
                })
           }
 
-          setIsUpdate(true);
+          setIsUpdate(!isUpdate);
      }
 
      useEffect(() => {
-          
+          setJsonResponse({  emailAddresses: [{
+               label: "work",
+               email: "mrniet@example.com",
+             }],
+             familyName: "Nietzsche",
+             givenName: "Friedrich"});
           const sendRequest = async () => {
                try {
                     const response = await fetch(urlText, {
@@ -77,16 +87,58 @@ const home = () => {
                     });
      
                     const json = await response.json();
-                    console.log('json', json);
-               } catch (error) {
-                    console.log(error);
-               }
-               
+                    setJsonResponse(json);
 
+               } catch (error) {
+                    if(error.message == 'Network request failed') 
+                    {
+                         Alert.alert('Conexión', 'Direccion/Url invalida');
+                    }
+               }
           }
+
+          NetInfo.fetch().then(state => {
+               if ( state.isConnected )
+               {
+                    sendRequest();
+               }
+               else
+               {
+                    Alert.alert('Conexión', 'Asegurese de que su dispositivo tenga acceso a internet.');
+               }
+          });
           
-          sendRequest();
      }, [isUpdate]);
+
+     useEffect(() => {
+          const getPermissions = async () => {
+               try {
+                    const andoidContactPermission = await PermissionsAndroid.request(
+                      PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
+                      {
+                        title: "Contacts Permission",
+                        message:
+                          "This app would like to view your contacts.",
+                        buttonNeutral: "Ask Me Later",
+                        buttonNegative: "Cancel",
+                        buttonPositive: "OK"
+                      }
+                    );
+                    if (andoidContactPermission === PermissionsAndroid.RESULTS.GRANTED) {
+                         Contacts.getAll((andoidContactPermission, contacts) => {
+                              console.log(contacts);
+                         });
+                    } 
+
+               } catch (err) 
+               {
+                    console.log(err);
+               }
+          }
+
+          getPermissions();
+          
+     }, [jsonResponse]);
      
 
      const changeUrl = (text) => {
@@ -105,7 +157,7 @@ const home = () => {
      return (
           <ScrollView style={Styles.form}>
                <View>
-                    <Text>Ingrese URL</Text>
+                    <Text style={Styles.texColor}>Ingrese URL</Text>
                     <TextInput
                          ref={textInputRef}
                          style={Styles.input}
@@ -113,6 +165,7 @@ const home = () => {
                          onFocus={ updateInputsProps }
                          onBlur={ updateInputsProps }
                          onChangeText={ text => changeUrl(text) }
+                         placeholderTextColor="#a3a3a3" 
                     />
                </View>
                <View style={Styles.view}>
