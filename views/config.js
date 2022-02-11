@@ -22,7 +22,6 @@ const config = () => {
                     <View pt="30">
                          <Text fontSize="3xl">Body</Text>
                     </View>
-                    <ConfigInputs type_inputs="body" />
                </ScrollView>
           </NativeBaseProvider>
      );

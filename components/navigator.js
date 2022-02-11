@@ -29,11 +29,6 @@ const NavigateUrl = () => {
                         options={{ title: 'Inicio' }}
                     />
                     <TopLink.Screen 
-                        name='Configuración'
-                        component={config}
-                        options={{ title: 'Configuración' }}
-                    />
-                    <TopLink.Screen 
                         name='Ayuda'
                         component={help}
                         options={{ title: 'Ayuda' }}

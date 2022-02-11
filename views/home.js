@@ -10,22 +10,18 @@ import {
 } from 'react-native';
 import { Button, Box, NativeBaseProvider } from 'native-base';
 import Styles from '../css/styles';
-import modal from '../components/modal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from "@react-native-community/netinfo";
 import Contacts from 'react-native-contacts';
 
 const home = () => {
 
+     const usernameRef = useRef();
      const textInputRef = useRef();
      const [disableSubmit, setDisableSubmit] = useState(true);
-     const [headerArray, setHeaderArray] = useState({
-          Accept: 'application/json',
-          'Content-Type': 'application/json'
-     });
-     const [bodyArray, setBodyArray] = useState({});
      const [isUpdate, setIsUpdate] = useState(false);
-     const [urlText, setUrlText] = useState('');
+     const [urlText, setUrlText] = useState();
+     const [username, setUsername] = useState();
      const [jsonResponse, setJsonResponse] = useState();
 
      const updateInputsProps = useCallback(() => {
@@ -37,96 +33,116 @@ const home = () => {
           {
                textInputRef.current.setNativeProps({ style: {borderColor: '#737373'} })
           }
+
+          if(usernameRef.current.isFocused()) 
+          {
+               usernameRef.current.setNativeProps({ style: {borderColor: '#0891b2'} })
+          } else 
+          {
+               usernameRef.current.setNativeProps({ style: {borderColor: '#737373'} })
+          }
      }, []);
 
-     const submitSync = async () => {
-
-          const headerKeyStorage = await AsyncStorage.getItem('keyTextValuesheader')
-          const headerValueStorage = await AsyncStorage.getItem('valueTextValuesheader')
-          const bodyKeyStorage = await AsyncStorage.getItem('keyTextValuesheader')
-          const bodyValueStorage = await AsyncStorage.getItem('valueTextValuesheader')
-
-          if(headerKeyStorage && headerValueStorage)
-          {
-               const headerKeyArray = JSON.parse(headerKeyStorage)
-               const headerValueArray = JSON.parse(headerValueStorage)
-
-               headerKeyArray.map( (item, index) => {
-                    var newObjet = Object.assign( headerArray , { [item.text]: headerValueArray[index].text });
-                    setHeaderArray(newObjet)
-               })
-          }
-
-          if(bodyKeyStorage && bodyValueStorage)
-          {
-               const bodyKeyArray = JSON.parse(bodyKeyStorage)
-               const bodyValueArray = JSON.parse(bodyValueStorage)
-
-               bodyKeyArray.map( (item, index) => {
-                    var newObjet = Object.assign( bodyArray, { [item.text]: bodyValueArray[index].text });
-                    setBodyArray(newObjet)
-               })
-          }
+     const submitSync = () => {
 
           setIsUpdate(!isUpdate);
      }
 
      useEffect(() => {
-          setJsonResponse({  emailAddresses: [{
-               label: "work",
-               email: "mrniet@example.com",
-             }],
-             familyName: "Nietzsche",
-             givenName: "Friedrich"});
-          const sendRequest = async () => {
+          const getText = async () => {
                try {
-                    const response = await fetch(urlText, {
-                         method: 'POST',
-                         headers: headerArray,
-                         body: JSON.stringify(bodyArray)
-                    });
-     
-                    const json = await response.json();
-                    setJsonResponse(json);
+                   const urlTextStorage = await AsyncStorage.getItem('urlText')
+                   const usernameStorage = await AsyncStorage.getItem('username')
+
+                   urlTextStorage != "" ? setUrlText(urlTextStorage) : '';
+                   usernameStorage != "" ? setUsername(usernameStorage) : '';
 
                } catch (error) {
-                    if(error.message == 'Network request failed') 
-                    {
-                         Alert.alert('Conexión', 'Direccion/Url invalida');
-                    }
+                   console.log(error)
                }
-          }
+           }
+   
+           getText();
+     }, []);
 
-          NetInfo.fetch().then(state => {
-               if ( state.isConnected )
-               {
-                    sendRequest();
-               }
-               else
-               {
-                    Alert.alert('Conexión', 'Asegurese de que su dispositivo tenga acceso a internet.');
-               }
-          });
+     useEffect(() => {
+          setJsonResponse([{  phoneNumbers: [{
+               label: "mobile",
+               number: "094581561561651651",
+             }],
+             displayName: "Venta y Alquiler",
+             company: "REWRITE",
+             givenName: "Friedrich"}]);
+          // const sendRequest = async () => {
+          //      try {
+          //           const response = await fetch(urlText, {
+          //                method: 'POST',
+          //                headers: headerArray,
+          //                body: JSON.stringify(bodyArray)
+          //           });
+     
+          //           const json = await response.json();
+          //           setJsonResponse(json);
+
+          //      } catch (error) {
+          //           if(error.message == 'Network request failed') 
+          //           {
+          //                Alert.alert('Conexión', 'Direccion/Url invalida');
+          //           }
+          //      }
+          // }
+
+          // NetInfo.fetch().then(state => {
+          //      if ( state.isConnected )
+          //      {
+          //           sendRequest();
+          //      }
+          //      else
+          //      {
+          //           Alert.alert('Conexión', 'Asegurese de que su dispositivo tenga acceso a internet.');
+          //      }
+          // });
           
      }, [isUpdate]);
 
      useEffect(() => {
           const getPermissions = async () => {
                try {
-                    const andoidContactPermission = await PermissionsAndroid.request(
-                      PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-                      {
-                        title: "Contacts Permission",
-                        message:
-                          "This app would like to view your contacts.",
-                        buttonNeutral: "Ask Me Later",
-                        buttonNegative: "Cancel",
-                        buttonPositive: "OK"
-                      }
+                    const andoidContactReadPermission = await PermissionsAndroid.request(
+                         PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
+                         {
+                              title: "Permisos",
+                              message:
+                                   "Permitir ver tus contactos.",
+                              buttonNegative: "Rechazar",
+                              buttonPositive: "Permitir"
+                         }
                     );
-                    if (andoidContactPermission === PermissionsAndroid.RESULTS.GRANTED) {
-                         Contacts.getAll((andoidContactPermission, contacts) => {
-                              console.log(contacts);
+
+                    const andoidContactWritePermission = await PermissionsAndroid.request(
+                         PermissionsAndroid.PERMISSIONS.WRITE_CONTACTS,
+                         {
+                              title: "Permisos",
+                              message:
+                                   "Permitir editar tus contactos.",
+                              buttonNegative: "Rechazar",
+                              buttonPositive: "Permitir"
+                         }
+                    );
+
+                    if(andoidContactReadPermission === PermissionsAndroid.RESULTS.GRANTED && andoidContactWritePermission === PermissionsAndroid.RESULTS.GRANTED) {
+
+                         Contacts.getAll().then(contacts => {
+                              contacts.map(item => {
+                                   if(item.displayName && item.displayName.includes('CONTRATO') || (item.company != '' && item.company.includes('REWRITE'))) 
+                                   {
+                                        Contacts.deleteContact(item);
+                                   }
+                              });
+                         });
+
+                         jsonResponse.map( jsonItems => {
+                              Contacts.addContact(jsonItems)
                          });
                     } 
 
@@ -140,32 +156,70 @@ const home = () => {
           
      }, [jsonResponse]);
      
+     useEffect(() => {
 
-     const changeUrl = (text) => {
-          if(text !== '')
+          const storeUrl = async() => {
+               try {
+                    await AsyncStorage.setItem('urlText', urlText ?? '')
+               } catch (error) {
+                    console.log(error)
+               }
+          }
+
+          if(urlText != '' && urlText)
           {
-               // console.log(document.getElementById('button_submit'))
-               setUrlText(text);
                setDisableSubmit(false)
           }
           else
           {
                setDisableSubmit(true)
           }
-     }
+
+          storeUrl();
+
+     }, [urlText]);
+
+     useEffect(() => {
+
+          const sotrageUsername = async () => {
+               try {
+                    await AsyncStorage.setItem('username', username ?? '')
+               } catch (error) {
+                    console.log(error)
+               }
+          }
+
+          sotrageUsername();
+
+     }, [username]);
+     
 
      return (
           <ScrollView style={Styles.form}>
                <View>
+                    <Text style={Styles.texColor}>Usuario</Text>
+                    <TextInput
+                         ref={usernameRef}
+                         defaultValue={ username != "" ? username : null}
+                         style={Styles.input}
+                         placeholder={'Usuario'}
+                         placeholderTextColor="#a3a3a3" 
+                         onFocus={ updateInputsProps }
+                         onBlur={ updateInputsProps }
+                         onChangeText={text => setUsername(text)}
+                    />
+               </View>
+               <View style={Styles.view}>
                     <Text style={Styles.texColor}>Ingrese URL</Text>
                     <TextInput
                          ref={textInputRef}
+                         defaultValue={ urlText != "" ? urlText : null}
                          style={Styles.input}
                          placeholder={'www.example.com'}
+                         placeholderTextColor="#a3a3a3" 
                          onFocus={ updateInputsProps }
                          onBlur={ updateInputsProps }
-                         onChangeText={ text => changeUrl(text) }
-                         placeholderTextColor="#a3a3a3" 
+                         onChangeText={ text => setUrlText(text) }
                     />
                </View>
                <View style={Styles.view}>
