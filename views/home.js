@@ -4,7 +4,6 @@ import {
      ScrollView, 
      TextInput, 
      Text,
-     StyleSheet,
      Alert,
      PermissionsAndroid 
 } from 'react-native';
@@ -13,13 +12,15 @@ import Styles from '../css/styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from "@react-native-community/netinfo";
 import Contacts from 'react-native-contacts';
+import ModalSubmit from '../components/modal';
 
 const home = () => {
 
+     const [modalVisible, setModalVisible] = useState(false);
+     const [modalText, setModalText]    = useState('');
      const usernameRef = useRef();
      const textInputRef = useRef();
      const [disableSubmit, setDisableSubmit] = useState(true);
-     const [isUpdate, setIsUpdate] = useState(false);
      const [urlText, setUrlText] = useState();
      const [username, setUsername] = useState();
      const [jsonResponse, setJsonResponse] = useState();
@@ -44,8 +45,49 @@ const home = () => {
      }, []);
 
      const submitSync = () => {
+          NetInfo.fetch().then(state => {
+               if ( state.isConnected )
+               {
+                    sendRequest();
+               }
+               else
+               {
+                    Alert.alert('Conexión', 'Asegurese de que su dispositivo tenga acceso a internet.');
+               }
+          });
+     }
 
-          setIsUpdate(!isUpdate);
+     const sendRequest = async () => {
+          try {
+
+               setModalVisible(true);
+               setModalText('Enviando Solicitud');
+
+               const response = await fetch(urlText, {
+                    method: 'POST',
+                    headers: {
+                         Accept: 'application/json',
+                         'Content-Type': 'application/json'
+                    },
+                    body: {
+                         username: username
+                    }
+               });
+               const json = await response.json();
+               const array = Object.values( json );
+
+               setJsonResponse(array);
+
+          } catch (error) {
+
+               if(error.message == 'Network request failed') 
+               {
+                    Alert.alert('Conexión', 'Direccion/Url invalida');
+               }
+
+               setModalVisible(false);
+               setModalText('');
+          }
      }
 
      useEffect(() => {
@@ -66,48 +108,11 @@ const home = () => {
      }, []);
 
      useEffect(() => {
-          setJsonResponse([{  phoneNumbers: [{
-               label: "mobile",
-               number: "094581561561651651",
-             }],
-             displayName: "Venta y Alquiler",
-             company: "REWRITE",
-             givenName: "Friedrich"}]);
-          // const sendRequest = async () => {
-          //      try {
-          //           const response = await fetch(urlText, {
-          //                method: 'POST',
-          //                headers: headerArray,
-          //                body: JSON.stringify(bodyArray)
-          //           });
-     
-          //           const json = await response.json();
-          //           setJsonResponse(json);
-
-          //      } catch (error) {
-          //           if(error.message == 'Network request failed') 
-          //           {
-          //                Alert.alert('Conexión', 'Direccion/Url invalida');
-          //           }
-          //      }
-          // }
-
-          // NetInfo.fetch().then(state => {
-          //      if ( state.isConnected )
-          //      {
-          //           sendRequest();
-          //      }
-          //      else
-          //      {
-          //           Alert.alert('Conexión', 'Asegurese de que su dispositivo tenga acceso a internet.');
-          //      }
-          // });
-          
-     }, [isUpdate]);
-
-     useEffect(() => {
           const getPermissions = async () => {
                try {
+                    console.log('entra aqui ')
+                    setModalText('Sincronizando contactos');
+
                     const andoidContactReadPermission = await PermissionsAndroid.request(
                          PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
                          {
@@ -118,6 +123,8 @@ const home = () => {
                               buttonPositive: "Permitir"
                          }
                     );
+                    
+                    console.log('entra aqui ', andoidContactReadPermission)
 
                     const andoidContactWritePermission = await PermissionsAndroid.request(
                          PermissionsAndroid.PERMISSIONS.WRITE_CONTACTS,
@@ -129,10 +136,12 @@ const home = () => {
                               buttonPositive: "Permitir"
                          }
                     );
-
-                    if(andoidContactReadPermission === PermissionsAndroid.RESULTS.GRANTED && andoidContactWritePermission === PermissionsAndroid.RESULTS.GRANTED) {
-
-                         Contacts.getAll().then(contacts => {
+                         
+                    if(andoidContactReadPermission === PermissionsAndroid.RESULTS.GRANTED && andoidContactWritePermission === PermissionsAndroid.RESULTS.GRANTED) 
+                    {
+     
+                         setModalText('Eliminando contactos');
+                         await Contacts.getAll().then(contacts => {
                               contacts.map(item => {
                                    if(item.displayName && item.displayName.includes('CONTRATO') || (item.company != '' && item.company.includes('REWRITE'))) 
                                    {
@@ -140,22 +149,46 @@ const home = () => {
                                    }
                               });
                          });
-
-                         jsonResponse.map( jsonItems => {
-                              Contacts.addContact(jsonItems)
+     
+                         setModalText('Sincronizando contactos');
+                         await jsonResponse.map( jsonItems => {
+                              try {
+                                   Contacts.addContact(jsonItems);
+                              } catch (error) {
+                                   setModalVisible(false);
+                                   setModalText('');
+     
+                                   Alert.alert('', 'Hubo un inconveniente al sincronizar los contactos.');
+                              }
                          });
+     
+                         setModalVisible(false);
+                         setModalText('');
+     
+                         Alert.alert('', 'Sincronizacion de contactos Exitosa.');
                     } 
-
+                    else
+                    {
+                         setModalVisible(false);
+                         setModalText('');
+                         Alert.alert('', 'No se han podido sincronizar los contactos, favor revise los permisos.')
+                    }
+     
                } catch (err) 
                {
-                    console.log(err);
+                    setModalVisible(false);
+                    setModalText('');
+                    Alert.alert('', 'No se han podido sincronizar los contactos.')
                }
           }
 
-          getPermissions();
-          
-     }, [jsonResponse]);
+          if(typeof jsonResponse !== 'undefined')
+          {
+               getPermissions();
+          }
+     }, [jsonResponse])
      
+
      useEffect(() => {
 
           const storeUrl = async() => {
@@ -231,6 +264,7 @@ const home = () => {
                          </Box>
                     </NativeBaseProvider>
                </View>
+               <ModalSubmit modalVisible={modalVisible}  modalText={modalText} />
           </ScrollView>
      );
 };
