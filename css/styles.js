@@ -44,6 +44,26 @@ const Styles = StyleSheet.create({
      modalText: {
           marginBottom: 15,
           textAlign: "center"
+     },
+     textTitle: {
+          color:'black',
+          fontWeight: 'bold',
+          fontSize: 33,
+          textAlign: 'center'
+     },
+     textSubTitle: {
+          color:'black',
+          fontWeight: 'bold',
+          fontSize: 26,
+     },
+     codeContent: {
+          backgroundColor: "#a3a3a3",
+          marginVertical: 20,
+          textAlign: 'left'
+     },
+     textCode: {
+          color: 'black',
+          textAlign: 'left'
      }
 });
 

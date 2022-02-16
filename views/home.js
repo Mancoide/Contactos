@@ -24,6 +24,10 @@ const home = () => {
      const [urlText, setUrlText] = useState();
      const [username, setUsername] = useState();
      const [jsonResponse, setJsonResponse] = useState();
+     const [permissions, setPermissions] = useState({
+          read_contacts: "",
+          write_contacts: ""
+     });
 
      const updateInputsProps = useCallback(() => {
 
@@ -43,6 +47,36 @@ const home = () => {
                usernameRef.current.setNativeProps({ style: {borderColor: '#737373'} })
           }
      }, []);
+
+     const requestPermissions = async () => {
+          const andoidContactReadPermission = await PermissionsAndroid.request(
+               PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
+               {
+                    title: "Permisos",
+                    message:
+                         "Permitir ver tus contactos.",
+                    buttonNegative: "Rechazar",
+                    buttonPositive: "Permitir"
+               }
+          );
+
+          const andoidContactWritePermission = await PermissionsAndroid.request(
+               PermissionsAndroid.PERMISSIONS.WRITE_CONTACTS,
+               {
+                    title: "Permisos",
+                    message:
+                         "Permitir editar tus contactos.",
+                    buttonNegative: "Rechazar",
+                    buttonPositive: "Permitir"
+               }
+          );
+
+          setPermissions({
+               read_contacts: andoidContactReadPermission,
+               write_contacts: andoidContactWritePermission
+          });
+     }
+     requestPermissions();
 
      const submitSync = () => {
           NetInfo.fetch().then(state => {
@@ -110,36 +144,8 @@ const home = () => {
      useEffect(() => {
           const getPermissions = async () => {
                try {
-                    console.log('entra aqui ')
-                    setModalText('Sincronizando contactos');
-
-                    const andoidContactReadPermission = await PermissionsAndroid.request(
-                         PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-                         {
-                              title: "Permisos",
-                              message:
-                                   "Permitir ver tus contactos.",
-                              buttonNegative: "Rechazar",
-                              buttonPositive: "Permitir"
-                         }
-                    );
-                    
-                    console.log('entra aqui ', andoidContactReadPermission)
-
-                    const andoidContactWritePermission = await PermissionsAndroid.request(
-                         PermissionsAndroid.PERMISSIONS.WRITE_CONTACTS,
-                         {
-                              title: "Permisos",
-                              message:
-                                   "Permitir editar tus contactos.",
-                              buttonNegative: "Rechazar",
-                              buttonPositive: "Permitir"
-                         }
-                    );
-                         
-                    if(andoidContactReadPermission === PermissionsAndroid.RESULTS.GRANTED && andoidContactWritePermission === PermissionsAndroid.RESULTS.GRANTED) 
+                    if(permissions.read_contacts === PermissionsAndroid.RESULTS.GRANTED && permissions.write_contacts === PermissionsAndroid.RESULTS.GRANTED) 
                     {
-     
                          setModalText('Eliminando contactos');
                          await Contacts.getAll().then(contacts => {
                               contacts.map(item => {
@@ -187,7 +193,6 @@ const home = () => {
                getPermissions();
           }
      }, [jsonResponse])
-     
 
      useEffect(() => {
 
@@ -225,7 +230,6 @@ const home = () => {
           sotrageUsername();
 
      }, [username]);
-     
 
      return (
           <ScrollView style={Styles.form}>

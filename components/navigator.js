@@ -2,8 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import home from '../views/home';
-import config from '../views/config';
-import help from '../views/help';
+import Help from '../views/help';
 
 const TopLink = createMaterialTopTabNavigator();
 
@@ -30,7 +29,7 @@ const NavigateUrl = () => {
                     />
                     <TopLink.Screen 
                         name='Ayuda'
-                        component={help}
+                        component={Help}
                         options={{ title: 'Ayuda' }}
                     />
             </TopLink.Navigator>

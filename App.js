@@ -8,9 +8,7 @@ import NavigateUrl  from './components/navigator';
 const App = () => {
 
      return (
-          <>
-               <NavigateUrl />
-          </>
+          <NavigateUrl />
      );
 };
 
