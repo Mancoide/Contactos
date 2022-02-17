@@ -59,7 +59,7 @@ const Styles = StyleSheet.create({
      codeContent: {
           backgroundColor: "#a3a3a3",
           marginVertical: 20,
-          textAlign: 'left'
+          alignContent: 'flex-start'
      },
      textCode: {
           color: 'black',
