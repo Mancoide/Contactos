@@ -96,16 +96,15 @@ const home = () => {
 
                setModalVisible(true);
                setModalText('Enviando Solicitud');
-
                const response = await fetch(urlText, {
                     method: 'POST',
                     headers: {
                          Accept: 'application/json',
-                         'Content-Type': 'application/json'
+                         'Content-Type': 'application/json',
                     },
-                    body: {
+                    body: JSON.stringify({
                          username: username
-                    }
+                    }),
                });
                const json = await response.json();
                const array = Object.values( json );
@@ -155,7 +154,7 @@ const home = () => {
                                    }
                               });
                          });
-     
+
                          setModalText('Sincronizando contactos');
                          await jsonResponse.map( jsonItems => {
                               try {
