@@ -96,7 +96,7 @@ const home = () => {
 
                setModalVisible(true);
                setModalText('Enviando Solicitud');
-               const response = await fetch(urlText, {
+               const response = await fetch('https://' + urlText, {
                     method: 'POST',
                     headers: {
                          Accept: 'application/json',

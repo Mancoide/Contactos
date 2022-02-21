@@ -27,11 +27,6 @@ const NavigateUrl = () => {
                         component={home}
                         options={{ title: 'Inicio' }}
                     />
-                    {/* <TopLink.Screen 
-                        name='Ayuda'
-                        component={Help}
-                        options={{ title: 'Ayuda' }}
-                    /> */}
             </TopLink.Navigator>
             
         </NavigationContainer>
