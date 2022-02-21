@@ -127,10 +127,8 @@ const home = () => {
           const getText = async () => {
                try {
                    const urlTextStorage = await AsyncStorage.getItem('urlText')
-                   const usernameStorage = await AsyncStorage.getItem('username')
 
                    urlTextStorage != "" ? setUrlText(urlTextStorage) : '';
-                   usernameStorage != "" ? setUsername(usernameStorage) : '';
 
                } catch (error) {
                    console.log(error)
@@ -138,6 +136,21 @@ const home = () => {
            }
    
            getText();
+     }, []);
+
+     useEffect(() => {
+          const getUsername = async () => {
+               try {
+                   const usernameStorage = await AsyncStorage.getItem('username')
+
+                   usernameStorage != "" ? setUsername(usernameStorage) : '';
+
+               } catch (error) {
+                   console.log(error)
+               }
+          }
+   
+          getUsername();
      }, []);
 
      useEffect(() => {
@@ -194,7 +207,6 @@ const home = () => {
      }, [jsonResponse])
 
      useEffect(() => {
-
           const storeUrl = async() => {
                try {
                     await AsyncStorage.setItem('urlText', urlText ?? '')
@@ -242,7 +254,7 @@ const home = () => {
                          placeholderTextColor="#a3a3a3" 
                          onFocus={ updateInputsProps }
                          onBlur={ updateInputsProps }
-                         onChangeText={text => setUsername(text)}
+                         onChangeText={ text => setUsername(text)}
                     />
                </View>
                <View style={Styles.view}>
