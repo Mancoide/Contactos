@@ -19,9 +19,7 @@ const home = () => {
      const [modalVisible, setModalVisible] = useState(false);
      const [modalText, setModalText]    = useState('');
      const usernameRef = useRef();
-     const textInputRef = useRef();
      const [disableSubmit, setDisableSubmit] = useState(true);
-     const [urlText, setUrlText] = useState();
      const [username, setUsername] = useState();
      const [jsonResponse, setJsonResponse] = useState();
      const [permissions, setPermissions] = useState({
@@ -30,14 +28,6 @@ const home = () => {
      });
 
      const updateInputsProps = useCallback(() => {
-
-          if(textInputRef.current.isFocused()) 
-          {
-               textInputRef.current.setNativeProps({ style: {borderColor: '#0891b2'} })
-          } else 
-          {
-               textInputRef.current.setNativeProps({ style: {borderColor: '#737373'} })
-          }
 
           if(usernameRef.current.isFocused()) 
           {
@@ -93,10 +83,9 @@ const home = () => {
 
      const sendRequest = async () => {
           try {
-
                setModalVisible(true);
                setModalText('Enviando Solicitud');
-               const response = await fetch('https://' + urlText, {
+               const response = await fetch('https://test-sistema.grupoepem.com.py/api/get-contacts', {
                     method: 'POST',
                     headers: {
                          Accept: 'application/json',
@@ -122,21 +111,6 @@ const home = () => {
                setModalText('');
           }
      }
-
-     useEffect(() => {
-          const getText = async () => {
-               try {
-                   const urlTextStorage = await AsyncStorage.getItem('urlText')
-
-                   urlTextStorage != "" ? setUrlText(urlTextStorage) : '';
-
-               } catch (error) {
-                   console.log(error)
-               }
-           }
-   
-           getText();
-     }, []);
 
      useEffect(() => {
           const getUsername = async () => {
@@ -207,28 +181,6 @@ const home = () => {
      }, [jsonResponse])
 
      useEffect(() => {
-          const storeUrl = async() => {
-               try {
-                    await AsyncStorage.setItem('urlText', urlText ?? '')
-               } catch (error) {
-                    console.log(error)
-               }
-          }
-
-          if(urlText != '' && urlText)
-          {
-               setDisableSubmit(false)
-          }
-          else
-          {
-               setDisableSubmit(true)
-          }
-
-          storeUrl();
-
-     }, [urlText]);
-
-     useEffect(() => {
 
           const sotrageUsername = async () => {
                try {
@@ -236,6 +188,15 @@ const home = () => {
                } catch (error) {
                     console.log(error)
                }
+          }
+
+          if(username != '' && username)
+          {
+               setDisableSubmit(false)
+          }
+          else
+          {
+               setDisableSubmit(true)
           }
 
           sotrageUsername();
@@ -255,19 +216,6 @@ const home = () => {
                          onFocus={ updateInputsProps }
                          onBlur={ updateInputsProps }
                          onChangeText={ text => setUsername(text)}
-                    />
-               </View>
-               <View style={Styles.view}>
-                    <Text style={Styles.texColor}>Ingrese URL</Text>
-                    <TextInput
-                         ref={textInputRef}
-                         defaultValue={ urlText != "" ? urlText : null}
-                         style={Styles.input}
-                         placeholder={'www.example.com'}
-                         placeholderTextColor="#a3a3a3" 
-                         onFocus={ updateInputsProps }
-                         onBlur={ updateInputsProps }
-                         onChangeText={ text => setUrlText(text) }
                     />
                </View>
                <View style={Styles.view}>
