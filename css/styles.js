@@ -16,6 +16,9 @@ const Styles = StyleSheet.create({
     view: {
          paddingVertical: 20
     },
+    texColor:{
+         color:'black'
+    }, 
     centeredView: {
           flex: 1,
           justifyContent: "center",
