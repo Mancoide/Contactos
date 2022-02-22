@@ -10,15 +10,12 @@ const Styles = StyleSheet.create({
     },
     form: {
          marginHorizontal:20,
-         marginTop: 40,
+         marginTop: '45%',
          color: 'black'
     },
     view: {
          paddingVertical: 20
     },
-    texColor:{
-         color:'black'
-    }, 
     centeredView: {
           flex: 1,
           justifyContent: "center",

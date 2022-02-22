@@ -206,7 +206,6 @@ const home = () => {
      return (
           <ScrollView style={Styles.form}>
                <View>
-                    <Text style={Styles.texColor}>Usuario</Text>
                     <TextInput
                          ref={usernameRef}
                          defaultValue={ username != "" ? username : null}
