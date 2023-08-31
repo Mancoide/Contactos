@@ -1,8 +1,6 @@
-import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
-import home from '../views/home';
-// import Help from '../views/help';
+import Home from '../views/home';
 
 const TopLink = createMaterialTopTabNavigator();
 
@@ -10,7 +8,7 @@ const NavigateUrl = () => {
 
     return (
         <NavigationContainer>
-            <TopLink.Navigator initialRouteName="Inicio" 
+            <TopLink.Navigator initialRoute="Inicio" 
                 screenOptions= {{
                     tabBarStyle: {
                         backgroundColor: '#0891b2',
@@ -24,8 +22,8 @@ const NavigateUrl = () => {
                 }}>
                     <TopLink.Screen 
                         name='Inicio'
-                        component={home}
-                        options={{ title: 'Inicio' }}
+                        component={Home}
+                        options={{ tabBarLabel: 'Inicio' }}
                     />
             </TopLink.Navigator>
             

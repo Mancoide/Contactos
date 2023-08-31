@@ -3,29 +3,32 @@ import {
      View,
      ScrollView, 
      TextInput, 
-     Text,
      Alert,
      PermissionsAndroid 
 } from 'react-native';
 import { Button, Box, NativeBaseProvider } from 'native-base';
 import Styles from '../css/styles';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from "@react-native-community/netinfo";
 import Contacts from 'react-native-contacts';
 import ModalSubmit from '../components/modal';
+import DeviceInfo from 'react-native-device-info';
 
-const home = () => {
+const Home = () => {
 
      const [modalVisible, setModalVisible] = useState(false);
      const [modalText, setModalText]    = useState('');
      const usernameRef = useRef();
      const [disableSubmit, setDisableSubmit] = useState(true);
      const [username, setUsername] = useState();
-     const [jsonResponse, setJsonResponse] = useState();
      const [permissions, setPermissions] = useState({
           read_contacts: "",
           write_contacts: ""
      });
+     
+     const handleChangeUserName = async (textInput) => {
+          setDisableSubmit(!(textInput != '' && textInput))
+          setUsername(textInput)
+     }
 
      const updateInputsProps = useCallback(() => {
 
@@ -96,9 +99,8 @@ const home = () => {
                     }),
                });
                const json = await response.json();
-               const array = Object.values( json );
-
-               setJsonResponse(array);
+               const arrayResponse = Object.values(json);
+               handleReceivedInformation(arrayResponse)
 
           } catch (error) {
 
@@ -112,96 +114,81 @@ const home = () => {
           }
      }
 
-     useEffect(() => {
-          const getUsername = async () => {
-               try {
-                   const usernameStorage = await AsyncStorage.getItem('username')
+     const handleReceivedInformation = async (arrayResponse) => {
 
-                   usernameStorage != "" ? setUsername(usernameStorage) : '';
+          try {
+               if(permissions.read_contacts === PermissionsAndroid.RESULTS.GRANTED && permissions.write_contacts === PermissionsAndroid.RESULTS.GRANTED) 
+               {
+                    let quantityContacts = 0;
 
-               } catch (error) {
-                   console.log(error)
-               }
-          }
-   
-          getUsername();
-     }, []);
+                    setModalText('Eliminando contactos');
+                    await Contacts.getAll().then(contacts => {
+                         contacts.map(item => {
+                              let deleteContact = false;
 
-     useEffect(() => {
-          const getPermissions = async () => {
-               try {
-                    if(permissions.read_contacts === PermissionsAndroid.RESULTS.GRANTED && permissions.write_contacts === PermissionsAndroid.RESULTS.GRANTED) 
-                    {
-                         setModalText('Eliminando contactos');
-                         await Contacts.getAll().then(contacts => {
-                              contacts.map(item => {
-                                   if(item.displayName && item.displayName.includes('CONTRATO') || (item.company != '' && item.company.includes('REWRITE'))) 
-                                   {
-                                        Contacts.deleteContact(item);
+                              if(item.displayName && item.displayName.includes('CONTRATO')) deleteContact = true
+                              
+                              if(item.company != '' && item.company.includes('REWRITE')) deleteContact = true
+
+                              if(item.familyName && item.familyName.includes('CONTRATO')) deleteContact = true
+
+                              if(item.givenName && item.givenName.includes('CONTRATO')) deleteContact = true
+
+                              if(deleteContact) Contacts.deleteContact(item);
+                         });
+                    });
+
+                    setModalText(`Guardando ${arrayResponse.length} contactos (0%)`);
+                    let androidVersion = DeviceInfo.getSystemVersion();
+
+                    await arrayResponse.map( jsonItems => {
+                         try {
+                              let itemToStore = jsonItems;
+
+                              if(androidVersion > 8 && !itemToStore.displayName) 
+                              {
+                                   itemToStore = {
+                                        ...itemToStore,
+                                        displayName: itemToStore.givenName
                                    }
-                              });
-                         });
-
-                         setModalText('Sincronizando contactos');
-                         await jsonResponse.map( jsonItems => {
-                              try {
-                                   Contacts.addContact(jsonItems);
-                              } catch (error) {
-                                   setModalVisible(false);
-                                   setModalText('');
-     
-                                   Alert.alert('', 'Hubo un inconveniente al sincronizar los contactos.');
                               }
-                         });
-     
-                         setModalVisible(false);
-                         setModalText('');
-     
-                         Alert.alert('', 'Sincronizacion de contactos Exitosa.');
-                    } 
-                    else
-                    {
-                         setModalVisible(false);
-                         setModalText('');
-                         Alert.alert('', 'No se han podido sincronizar los contactos, favor revise los permisos.')
-                    }
-     
-               } catch (err) 
+
+                              Contacts.addContact(itemToStore);
+
+                              quantityContacts = quantityContacts + 1;
+
+                              // Actualizar el progreso
+                              setModalText(`Guardando ${arrayResponse.length} contactos (${Math.round(quantityContacts / arrayResponse.length * 100)}%)`);
+
+                         } catch (error) {
+                              setModalVisible(false);
+                              setModalText('');
+
+                              Alert.alert('', 'Hubo un inconveniente al sincronizar los contactos.');
+                         }
+                    });
+
+                    setModalVisible(false);
+                    setModalText('');
+
+                    Alert.alert('', `Se agregaron ${quantityContacts} contactos.`);
+               } 
+               else
                {
                     setModalVisible(false);
                     setModalText('');
-                    Alert.alert('', 'No se han podido sincronizar los contactos.')
+                    Alert.alert('', 'No se han podido sincronizar los contactos, favor revise los permisos.')
+                    requestPermissions();
                }
-          }
 
-          if(typeof jsonResponse !== 'undefined')
+          } catch (err) 
           {
-               getPermissions();
+               setModalVisible(false);
+               setModalText('');
+               Alert.alert('', 'No se han podido sincronizar los contactos.')
           }
-     }, [jsonResponse])
+     }
 
-     useEffect(() => {
-
-          const sotrageUsername = async () => {
-               try {
-                    await AsyncStorage.setItem('username', username ?? '')
-               } catch (error) {
-                    console.log(error)
-               }
-          }
-
-          if(username != '' && username)
-          {
-               setDisableSubmit(false)
-          }
-          else
-          {
-               setDisableSubmit(true)
-          }
-
-          sotrageUsername();
-
-     }, [username]);
 
      return (
           <ScrollView style={Styles.form}>
@@ -214,7 +201,7 @@ const home = () => {
                          placeholderTextColor="#a3a3a3" 
                          onFocus={ updateInputsProps }
                          onBlur={ updateInputsProps }
-                         onChangeText={ text => setUsername(text)}
+                         onChangeText={ (text) => handleChangeUserName(text)}
                     />
                </View>
                <View style={Styles.view}>
@@ -231,4 +218,4 @@ const home = () => {
      );
 };
 
-export default home;
+export default Home;
