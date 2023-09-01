@@ -88,7 +88,7 @@ const Home = () => {
           try {
                setModalVisible(true);
                setModalText('Enviando Solicitud');
-               const response = await fetch('https://test-sistema.grupoepem.com.py/api/get-contacts', {
+               const response = await fetch('https://sistema.grupoepem.com.py/api/get-contacts', {
                     method: 'POST',
                     headers: {
                          Accept: 'application/json',
@@ -99,8 +99,9 @@ const Home = () => {
                     }),
                });
                const json = await response.json();
+
                const arrayResponse = Object.values(json);
-               handleReceivedInformation(arrayResponse)
+               handleReceivedInformation(arrayResponse);
 
           } catch (error) {
 
@@ -121,24 +122,20 @@ const Home = () => {
                {
                     let quantityContacts = 0;
 
-                    setModalText('Eliminando contactos');
-                    await Contacts.getAll().then(contacts => {
-                         contacts.map(item => {
-                              let deleteContact = false;
+                    setModalText(`Sincronizando ${arrayResponse.length} contactos`);
+                    await Contacts.getAllWithoutPhotos().then((contacts) => {
 
-                              if(item.displayName && item.displayName.includes('CONTRATO')) deleteContact = true
-                              
-                              if(item.company != '' && item.company.includes('REWRITE')) deleteContact = true
+                         contacts.filter((contact) => 
+                              contact.displayName && contact.displayName.includes('CONTRATO')   ||
+                              contact.familyName && contact.familyName.includes('CONTRATO')     ||
+                              contact.givenName && contact.givenName.includes('CONTRATO')       ||
+                              contact.company != '' && contact.company.includes('REWRITE')
+                         ).map(item => {
+                              Contacts.deleteContact({recordID: item.recordID})
+                         })
 
-                              if(item.familyName && item.familyName.includes('CONTRATO')) deleteContact = true
-
-                              if(item.givenName && item.givenName.includes('CONTRATO')) deleteContact = true
-
-                              if(deleteContact) Contacts.deleteContact(item);
-                         });
                     });
 
-                    setModalText(`Guardando ${arrayResponse.length} contactos (0%)`);
                     let androidVersion = DeviceInfo.getSystemVersion();
 
                     await arrayResponse.map( jsonItems => {
@@ -156,9 +153,6 @@ const Home = () => {
                               Contacts.addContact(itemToStore);
 
                               quantityContacts = quantityContacts + 1;
-
-                              // Actualizar el progreso
-                              setModalText(`Guardando ${arrayResponse.length} contactos (${Math.round(quantityContacts / arrayResponse.length * 100)}%)`);
 
                          } catch (error) {
                               setModalVisible(false);
@@ -205,7 +199,7 @@ const Home = () => {
                     />
                </View>
                <View style={Styles.view}>
-                    <NativeBaseProvider>
+                    <NativeBaseProvider isSSR={false}>
                          <Box>
                               <Button key='sm' size='sm' id="button_submit" isDisabled={disableSubmit} onPress={ () => submitSync() }>
                                    Sincronizar
